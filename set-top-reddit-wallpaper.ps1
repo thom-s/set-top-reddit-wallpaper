@@ -5,20 +5,14 @@ $folder = "C:\This\Is\A\Folder" # Change this path to the folder where you want 
 # Find URL of image in the reddit JSON API
 $json = Invoke-RestMethod -uri https://www.reddit.com/r/wallpapers/.json?t=day  # Get JSON file for the top posts of the day in /r/wallpaper
 $url = $json.data.children[0].data.preview.images[0].source.url                 # Navigate through the JSON to get the URL
-$url = $url.Replace('amp;s', 's')                                               # More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
+$url = $url.Replace('&amp;', '&')                                               # Replace &amp with & in the URL; More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
 
 
 # Get the filename 
-$todaydate = Get-Date -Format "yyyy-MM-dd" # Get the date (file will be saved as date)
-
-If($url -contains "png"){                  # Check whether to save as PNG or JPG
-    $filename = "$todaydate.png"       
-}
-Else{ 
-    $filename = "$todaydate.jpg"
-}
-
-$path = "$folder\$filename"                # Complete outfile path
+$todaydate = Get-Date -Format "yyyy-MM-dd"      # Get the date (file will be saved as date)
+$extension = $url -replace '.*\.(.*?)\?.*','$1' # Get the file extension from the URL
+$filename = "$todaysdate.$extension"            # Combine the date + the extension for the filename
+$path = "$folder\$filename"                     # Complete outfile path (folder param + filename)
 
 
 # Download and save the file
