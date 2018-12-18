@@ -1,13 +1,26 @@
 # Parameters
-$folder = "C:\This\Is\A\Folder" # Change this path to the folder where you want to save the wallpapers
+$folder = "C:\This\Is\A\Folder"                # Change this path to the folder where you want to save the wallpapers
+$subreddits = @("wallpapers","wallpaper")      # List of subreddits to go through
+$timeframe = "day"                             # Can be set to day, week, month, etc
 
+# Initialise upvotes to 0 (variable to check which has more upvotes)
+$upvotes = 0
 
-# Find URL of image in the reddit JSON API
-$json = Invoke-RestMethod -uri https://www.reddit.com/r/wallpapers/.json?t=day  # Get JSON file for the top posts of the day in /r/wallpaper
-$url = $json.data.children[0].data.preview.images[0].source.url                 # Navigate through the JSON to get the URL
-$url = $url.Replace('&amp;', '&')                                               # Replace &amp with & in the URL; More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
+# Loop through each subreddit
+$subreddits | ForEach-Object{
+    $json = Invoke-RestMethod -uri https://www.reddit.com/r/$_/top.json?t=$timeframe  # Get JSON file for the top posts
+    $sub_upvotes = $json.data.children[0].data.ups                                    # Get number of upvotes for the top post
+    
+    # If the top post has more upvotes than the (current) most upvoted
+    if($sub_upvotes -gt $upvotes){
+        $upvotes = $sub_upvotes                                         # Set as most upvoted top post
+        $url = $json.data.children[0].data.preview.images[0].source.url # Navigate through the JSON to get the URL
+    }
+}
 
-
+# Replace &amp with & in the URL; More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
+$url = $url.Replace('&amp;', '&') 
+                             
 # Get the filename 
 $todaydate = Get-Date -Format "yyyy-MM-dd"      # Get the date (file will be saved as date)
 $extension = $url -replace '.*\.(.*?)\?.*','$1' # Get the file extension from the URL
