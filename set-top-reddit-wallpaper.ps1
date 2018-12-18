@@ -9,10 +9,10 @@ $url = $url.Replace('&amp;', '&')                                               
 
 
 # Get the filename 
-$todaydate = Get-Date -Format "yyyy-MM-dd"      # Get the date (file will be saved as date)
-$extension = $url -replace '.*\.(.*?)\?.*','$1' # Get the file extension from the URL
-$filename = "$todaysdate.$extension"            # Combine the date + the extension for the filename
-$path = "$folder\$filename"                     # Complete outfile path (folder param + filename)
+$todaydate = Get-Date -Format "yyyy-MM-dd HH-mm"  # Get the date (file will be saved as date)
+$extension = $url -replace '.*\.(.*?)\?.*','$1'   # Get the file extension from the URL
+$filename = "$todaydate.$extension"              # Combine the date + the extension for the filename
+$path = "$folder\$filename"                       # Complete outfile path (folder param + filename)
 
 
 # Download and save the file
