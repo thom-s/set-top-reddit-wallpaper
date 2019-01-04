@@ -21,20 +21,24 @@ $subreddits | ForEach-Object{
 # Replace &amp with & in the URL; More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
 $url = $url.Replace('&amp;', '&') 
                              
-# Get the filename 
+# Get the filename
+$todaysdate = Get-Date -Format "yyyy-MM-dd"      # Get the date (file will be saved as date)
+$extension = $url -replace '.*\.(.*?)\?.*', '$1' # Get the file extension from the URL
+$filename = "$todaysdate.$extension"             # Combine the date + the extension for the filename
+$path = Join-Path $folder $filename              # Complete outfile path (folder param + filename)
 $todaydate = Get-Date -Format "yyyy-MM-dd HH-mm"  # Get the date (file will be saved as date)
 $extension = $url -replace '.*\.(.*?)\?.*','$1' # Get the file extension from the URL
 $filename = "$todaydate.$extension"             # Combine the date + the extension for the filename
 $path = "$folder\$filename"                     # Complete outfile path (folder param + filename)
 
-
-
 # Download and save the file
 Invoke-WebRequest $url -OutFile $path
 
+$os = Get-ChildItem -Path Env: | Where-Object { $_.Key -eq "OS" } | Select-Object -ExpandProperty Value
 
-# Set the wallpaper - stolen from : https://stackoverflow.com/questions/43187787/change-wallpaper-powershell
-$setwallpapersrc = @"
+if ($IsWindows -or ($os -like "Windows*")) {
+    # Set the wallpaper - stolen from : https://stackoverflow.com/questions/43187787/change-wallpaper-powershell
+    $setwallpapersrc = @"
 using System.Runtime.InteropServices;
 public class wallpaper
 {
@@ -50,6 +54,13 @@ SystemParametersInfo( SetDesktopWallpaper, 0, path, UpdateIniFile | SendWinIniCh
 }
 "@
 
-Add-Type -TypeDefinition $setwallpapersrc
+    Add-Type -TypeDefinition $setwallpapersrc
 
-[wallpaper]::SetWallpaper($path) 
+    [wallpaper]::SetWallpaper($path) 
+}
+
+if ($IsMacOS) {
+    $setmacoswallpaper = "osascript -e 'tell application \`"Finder\`" to set desktop picture to POSIX file \`"$path\`"'"
+    Invoke-Expression $setmacoswallpaper
+}
+
