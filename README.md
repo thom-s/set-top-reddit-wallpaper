@@ -1,5 +1,5 @@
 # set-top-reddit-wallpaper
-PowerShell script to set the wallpaper as the top post of the day from /r/wallpapers and /r/wallpaper.
+PowerShell script to set the wallpaper as the top post of the day/week/month from /r/wallpapers and /r/wallpaper or any other subreddits.
 
 You can change the subreddits to look through and the timeframe.
 
