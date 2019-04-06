@@ -1,7 +1,7 @@
 # Parameters
-$folder = "C:\This\Is\A\Folder"                # Change this path to the folder where you want to save the wallpapers
-$subreddits = @("wallpapers","wallpaper")      # List of subreddits to go through
-$timeframe = "day"                             # Can be set to day, week, month, etc
+$folder = "C:\This\Is\A\Folder"           # Change this path to the folder where you want to save the wallpapers
+$subreddits = @("ultrahdwallpapers")      # List of subreddits to go through
+$timeframe = "day"                        # Can be set to day, week, month, etc
 
 # Initialise upvotes to 0 (variable to check which has more upvotes)
 $upvotes = 0
@@ -16,20 +16,32 @@ $subreddits | ForEach-Object{
         $upvotes = $sub_upvotes                                         # Set as most upvoted top post
         $url = $json.data.children[0].data.preview.images[0].source.url # Navigate through the JSON to get the URL
     }
+
+    # Set the url to the real downloadurl if the picture is from uhdwallpapers
+    if($json.data.children[0].data.url.indexOf("uhdwallpapers.org"))
+    {
+        $url=$json.data.children[0].data.url.Replace("/wallpaper/","/download/")+"3840x2160/"
+    }
 }
 
 # Replace &amp with & in the URL; More info : https://old.reddit.com/r/redditdev/comments/9ncg2r/changes_in_api_pictures/
 $url = $url.Replace('&amp;', '&') 
                              
 # Get the filename
-$todaysdate = Get-Date -Format "yyyy-MM-dd"      # Get the date (file will be saved as date)
-$extension = $url -replace '.*\.(.*?)\?.*', '$1' # Get the file extension from the URL
-$filename = "$todaysdate.$extension"             # Combine the date + the extension for the filename
-$path = Join-Path $folder $filename              # Complete outfile path (folder param + filename)
-$todaydate = Get-Date -Format "yyyy-MM-dd HH-mm"  # Get the date (file will be saved as date)
-$extension = $url -replace '.*\.(.*?)\?.*','$1' # Get the file extension from the URL
-$filename = "$todaydate.$extension"             # Combine the date + the extension for the filename
-$path = "$folder\$filename"                     # Complete outfile path (folder param + filename)
+$todaysdate = Get-Date -Format "yyyy-MM-dd"                                   # Get the date (file will be saved as date)
+$extension = $json.data.children[0].data.thumbnail -replace '.+\.(\w+)', '$1' # Get the file extension from the thumbnail
+$filename = "$todaysdate.$extension"                                          # Combine the date + the extension for the filename
+$path = Join-Path $folder $filename                                           # Complete outfile path (folder param + filename)
+$todaydate = Get-Date -Format "yyyy-MM-dd HH-mm"                              # Get the date (file will be saved as date)
+$extension = $url -replace '.*\.(.*?)\?.*','$1'                               # Get the file extension from the URL
+
+# Look at the headers for a filename
+$matches = ([regex]"(?:"")(.+)(?:"")").match((Invoke-WebRequest -Uri $url -Method Head).Headers["Content-Disposition"])
+if($matches.Groups)
+{
+    # Set the path to the found filename
+    $path = Join-Path $folder $matches.Groups[1].Value
+}
 
 # Download and save the file
 Invoke-WebRequest $url -OutFile $path
